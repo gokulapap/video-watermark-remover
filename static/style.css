@@ -1,0 +1,12 @@
+.container { max-width: 900px; margin: 20px auto; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif; }
+.upload { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.player { border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; }
+.video-wrapper { position: relative; width: 100%; background: #000; aspect-ratio: 16/9; overflow: hidden; border-radius: 6px; }
+#video { width: 100%; height: 100%; object-fit: contain; display: block; }
+#overlay { position: absolute; left: 0; top: 0; pointer-events: auto; z-index: 2; }
+.controls { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+#processStatus { margin-top: 8px; color: #374151; }
+#downloadLink { margin-top: 8px; }
+button { background: #111827; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+button:disabled { background: #9ca3af; cursor: not-allowed; }
+select, input[type="file"] { padding: 6px; }

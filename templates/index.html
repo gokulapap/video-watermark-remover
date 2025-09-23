@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Watermark Remover</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Watermark Remover</h1>
+
+    <div class="upload">
+      <input type="file" id="fileInput" accept="video/*" />
+      <button id="uploadBtn">Upload</button>
+      <span id="uploadStatus"></span>
+    </div>
+
+    <div class="player">
+      <div class="video-wrapper">
+        <video id="video" controls></video>
+        <canvas id="overlay"></canvas>
+      </div>
+      <div class="controls">
+        <label>Method:
+          <select id="method">
+            <option value="telea" selected>Telea (fast, good)</option>
+            <option value="ns">Navier-Stokes (slower)</option>
+          </select>
+        </label>
+        <label>Quality:
+          <select id="quality">
+            <option value="fast">Fast (smaller, lower quality)</option>
+            <option value="balanced">Balanced</option>
+            <option value="better">Better (slow, high quality)</option>
+            <option value="best" selected>Best (very slow, near-lossless, ≥1080p)</option>
+          </select>
+        </label>
+        <button id="clearRoi">Clear ROI</button>
+        <button id="processBtn" disabled>Remove</button>
+      </div>
+      <div id="processStatus"></div>
+      <div id="downloadLink"></div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
