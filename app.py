@@ -72,7 +72,7 @@ def process():
     filename = data.get('filename')
     roi = data.get('roi')
     method = data.get('method', 'telea')
-    quality = data.get('quality', 'best')
+    quality = data.get('quality', 'ultra')
 
     if not filename or not roi:
         return jsonify({'error': 'filename and roi are required'}), 400
@@ -81,13 +81,11 @@ def process():
     if not os.path.exists(input_path):
         return jsonify({'error': 'File not found'}), 404
 
-    # Paths
     output_basename = f"processed_{uuid.uuid4().hex}.mp4"
     frames_dir = os.path.join(TEMP_FOLDER, f"frames_{uuid.uuid4().hex}")
     output_path = os.path.join(OUTPUT_FOLDER, output_basename)
 
     try:
-        # 1) Write lossless frames
         fps = remove_watermark_roi_to_frames(
             input_video_path=input_path,
             output_frames_dir=frames_dir,
@@ -95,17 +93,14 @@ def process():
             inpaint_method=method
         )
 
-        # 2) Determine scaling
         width, height = probe_resolution(input_path)
         scale_filter = build_scale_filter(width, height)
 
-        # 3) Encode frames + mux original audio
         encode_frames_and_mux(frames_dir, fps, input_path, output_path, quality, scale_filter)
 
     except Exception as exc:
         return jsonify({'error': str(exc)}), 500
     finally:
-        # Cleanup frames
         try:
             if os.path.isdir(frames_dir):
                 shutil.rmtree(frames_dir)
@@ -146,15 +141,16 @@ def build_scale_filter(src_w: int, src_h: int) -> str:
 
 
 def encode_frames_and_mux(frames_dir: str, fps: float, source_with_audio: str, output_path: str, quality: str, scale_filter: str) -> None:
+    # Quality map: include ultra (lossless x264)
     presets = {
-        'fast': ('veryfast', '23'),
-        'balanced': ('medium', '20'),
-        'better': ('slow', '18'),
-        'best': ('veryslow', '16'),
+        'fast': ('veryfast', '23', None),
+        'balanced': ('medium', '20', None),
+        'better': ('slow', '18', None),
+        'best': ('veryslow', '16', None),
+        'ultra': ('placebo', None, '0')  # qp=0 lossless
     }
-    preset, crf = presets.get(quality, ('veryslow', '16'))
+    preset, crf, qp = presets.get(quality, ('placebo', None, '0'))
 
-    # Input pattern for frames
     pattern = os.path.join(frames_dir, 'frame_%06d.png')
 
     cmd = [
@@ -163,13 +159,19 @@ def encode_frames_and_mux(frames_dir: str, fps: float, source_with_audio: str, o
         '-i', source_with_audio,
         '-map', '0:v:0', '-map', '1:a:0?',
         '-filter:v', scale_filter,
-        '-c:v', 'libx264', '-preset', preset, '-crf', crf,
+        '-c:v', 'libx264', '-preset', preset,
         '-pix_fmt', 'yuv420p',
         '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
         '-movflags', '+faststart',
         '-c:a', 'aac', '-b:a', '192k',
         output_path
     ]
+    if qp is not None:
+        cmd[cmd.index('-pix_fmt')] = '-qp'
+        cmd[cmd.index('-qp') + 1:cmd.index('-qp') + 1] = [qp, '-pix_fmt']
+    else:
+        cmd[cmd.index('-c:v') + 4:cmd.index('-c:v') + 4] = ['-crf', crf]
+
     run_ffmpeg(cmd)
 
 

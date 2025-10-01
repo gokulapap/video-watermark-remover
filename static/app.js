@@ -15,9 +15,9 @@ let isDrawing = false;
 let startX = 0, startY = 0;
 let roi = null; // {x, y, width, height} in video pixel coordinates
 
-// Ensure default quality is best if not set by DOM
+// Ensure default quality is ultra if not set by DOM
 if (qualitySelect && !qualitySelect.value) {
-  qualitySelect.value = 'best';
+  qualitySelect.value = 'ultra';
 }
 
 function fitCanvasToVideo() {
@@ -133,7 +133,7 @@ processBtn.addEventListener('click', async () => {
     const res = await fetch('/process', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: uploadedFilename, roi, method: methodSelect.value, quality: qualitySelect.value || 'best' })
+      body: JSON.stringify({ filename: uploadedFilename, roi, method: methodSelect.value, quality: qualitySelect.value || 'ultra' })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Processing failed');
