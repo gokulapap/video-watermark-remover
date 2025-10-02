@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+.pytest_cache/
+*.coverage
+.coverage*
+htmlcov/
+
+# Environments
+.venv/
+venv/
+.env
+.env.*
+
+# OS/IDE
+.DS_Store
+.idea/
+.vscode/
+
+# App runtime artifacts
+uploads/
+outputs/
+temp/
+logs/
+cache/
+
+# FFmpeg intermediates
+*.log
+*.tmp
+
+# Node (if any future tooling)
+node_modules/
