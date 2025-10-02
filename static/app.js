@@ -1,27 +1,69 @@
+const dropzone = document.getElementById('dropzone');
+const browseBtn = document.getElementById('browseBtn');
 const fileInput = document.getElementById('fileInput');
 const uploadBtn = document.getElementById('uploadBtn');
 const uploadStatus = document.getElementById('uploadStatus');
+const uploadProgress = document.getElementById('uploadProgress');
+const uploadProgressBar = document.getElementById('uploadProgressBar');
+
 const video = document.getElementById('video');
 const overlay = document.getElementById('overlay');
+const overlayHelp = document.getElementById('overlayHelp');
+
 const methodSelect = document.getElementById('method');
 const qualitySelect = document.getElementById('quality');
 const clearRoiBtn = document.getElementById('clearRoi');
 const processBtn = document.getElementById('processBtn');
 const processStatus = document.getElementById('processStatus');
+const processProgress = document.getElementById('processProgress');
 const downloadLink = document.getElementById('downloadLink');
+const toasts = document.getElementById('toasts');
 
 let uploadedFilename = null;
 let isDrawing = false;
 let startX = 0, startY = 0;
-let roi = null; // {x, y, width, height} in video pixel coordinates
+let roi = null; // {x, y, width, height}
 
-// Ensure default quality is ultra if not set by DOM
-if (qualitySelect && !qualitySelect.value) {
-  qualitySelect.value = 'ultra';
+// Toasts
+function toast(message, type = 'success', timeout = 2500) {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = message;
+  toasts.appendChild(t);
+  setTimeout(() => { t.remove(); }, timeout);
 }
 
+// Dropzone
+['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => {
+  e.preventDefault(); e.stopPropagation();
+  dropzone.classList.add('dragover');
+}));
+['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => {
+  e.preventDefault(); e.stopPropagation();
+  dropzone.classList.remove('dragover');
+}));
+dropzone.addEventListener('drop', (e) => {
+  const files = e.dataTransfer.files;
+  if (!files || !files.length) return;
+  fileInput.files = files;
+  updateUploadState();
+});
+
+browseBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', updateUploadState);
+
+function updateUploadState() {
+  if (fileInput.files && fileInput.files[0]) {
+    uploadBtn.disabled = false;
+    uploadStatus.textContent = fileInput.files[0].name;
+  } else {
+    uploadBtn.disabled = true;
+    uploadStatus.textContent = '';
+  }
+}
+
+// Canvas size to video
 function fitCanvasToVideo() {
-  // Size the canvas to the rendered video box (within wrapper)
   const w = video.clientWidth || video.videoWidth;
   const h = video.clientHeight || video.videoHeight;
   if (!w || !h) return;
@@ -37,7 +79,7 @@ function drawOverlay() {
   const ctx = overlay.getContext('2d');
   ctx.clearRect(0, 0, overlay.width, overlay.height);
   if (!roi) return;
-  ctx.strokeStyle = '#00e5ff';
+  ctx.strokeStyle = '#22c55e';
   ctx.lineWidth = 2;
   ctx.setLineDash([6, 4]);
   const scaleX = overlay.width / video.videoWidth;
@@ -45,40 +87,61 @@ function drawOverlay() {
   ctx.strokeRect(roi.x * scaleX, roi.y * scaleY, roi.width * scaleX, roi.height * scaleY);
 }
 
-window.addEventListener('resize', () => {
-  fitCanvasToVideo();
-  drawOverlay();
-});
+window.addEventListener('resize', () => { fitCanvasToVideo(); drawOverlay(); });
+video.addEventListener('loadedmetadata', () => { fitCanvasToVideo(); overlayHelp.style.display = 'block'; processBtn.disabled = !uploadedFilename; });
 
-video.addEventListener('loadedmetadata', () => {
-  fitCanvasToVideo();
-  processBtn.disabled = !uploadedFilename;
-});
-
+// Upload with progress (XHR for progress events)
 uploadBtn.addEventListener('click', async () => {
   const file = fileInput.files && fileInput.files[0];
-  if (!file) {
-    uploadStatus.textContent = 'Select a video first.';
-    return;
-  }
-  uploadStatus.textContent = 'Uploading...';
+  if (!file) { toast('Select a video first', 'error'); return; }
+  uploadProgress.hidden = false;
+  uploadProgressBar.style.width = '0%';
+  uploadBtn.disabled = true;
+
   const form = new FormData();
   form.append('video', file);
+
   try {
-    const res = await fetch('/upload', { method: 'POST', body: form });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    const data = await uploadWithProgress('/upload', form, (pct) => {
+      uploadProgressBar.style.width = `${pct}%`;
+    });
     uploadedFilename = data.filename;
     video.src = data.videoUrl;
-    uploadStatus.textContent = 'Uploaded.';
+    toast('Uploaded successfully');
     processBtn.disabled = false;
-    // Wait a tick for layout, then fit canvas
-    setTimeout(() => { fitCanvasToVideo(); drawOverlay(); }, 50);
   } catch (e) {
-    uploadStatus.textContent = 'Error: ' + e.message;
+    toast(e.message || 'Upload failed', 'error');
+  } finally {
+    uploadBtn.disabled = false;
+    setTimeout(() => { uploadProgress.hidden = true; }, 500);
   }
 });
 
+function uploadWithProgress(url, form, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        onProgress(pct);
+      }
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+        else reject(new Error(data.error || 'Upload failed'));
+      } catch {
+        reject(new Error('Invalid server response'));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.send(form);
+  });
+}
+
+// ROI interactions
 function getMousePos(evt) {
   const rect = overlay.getBoundingClientRect();
   return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
@@ -88,9 +151,9 @@ overlay.addEventListener('mousedown', (e) => {
   if (!video.videoWidth) return;
   isDrawing = true;
   const p = getMousePos(e);
-  startX = p.x;
-  startY = p.y;
+  startX = p.x; startY = p.y;
   roi = { x: 0, y: 0, width: 0, height: 0 };
+  overlayHelp.style.display = 'none';
 });
 
 overlay.addEventListener('mousemove', (e) => {
@@ -100,7 +163,6 @@ overlay.addEventListener('mousemove', (e) => {
   const y = Math.min(p.y, startY);
   const w = Math.abs(p.x - startX);
   const h = Math.abs(p.y - startY);
-
   const scaleX = video.videoWidth / overlay.width;
   const scaleY = video.videoHeight / overlay.height;
   roi = {
@@ -112,23 +174,19 @@ overlay.addEventListener('mousemove', (e) => {
   drawOverlay();
 });
 
-overlay.addEventListener('mouseup', () => {
-  isDrawing = false;
-});
+overlay.addEventListener('mouseup', () => { isDrawing = false; });
+clearRoiBtn.addEventListener('click', () => { roi = null; drawOverlay(); overlayHelp.style.display = 'block'; });
 
-clearRoiBtn.addEventListener('click', () => {
-  roi = null;
-  drawOverlay();
-});
-
+// Process
 processBtn.addEventListener('click', async () => {
-  if (!uploadedFilename) return;
-  if (!roi || roi.width <= 0 || roi.height <= 0) {
-    processStatus.textContent = 'Draw a rectangle over the watermark.';
-    return;
-  }
-  processStatus.textContent = 'Processing... This may take a while for long videos.';
+  if (!uploadedFilename) { toast('Upload a video first', 'error'); return; }
+  if (!roi || roi.width <= 0 || roi.height <= 0) { toast('Draw a rectangle over the watermark', 'error'); return; }
+
+  processStatus.textContent = 'Processing...';
+  processProgress.hidden = false;
   downloadLink.innerHTML = '';
+  processBtn.disabled = true;
+
   try {
     const res = await fetch('/process', {
       method: 'POST',
@@ -137,13 +195,19 @@ processBtn.addEventListener('click', async () => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Processing failed');
-    processStatus.textContent = 'Done.';
+    processStatus.textContent = 'Done';
     const a = document.createElement('a');
     a.href = data.downloadUrl;
     a.textContent = 'Download processed video';
+    a.className = 'btn';
     a.download = data.outputFilename;
     downloadLink.appendChild(a);
+    toast('Processing complete');
   } catch (e) {
-    processStatus.textContent = 'Error: ' + e.message;
+    processStatus.textContent = 'Error';
+    toast(e.message || 'Processing failed', 'error');
+  } finally {
+    processProgress.hidden = true;
+    processBtn.disabled = false;
   }
 });

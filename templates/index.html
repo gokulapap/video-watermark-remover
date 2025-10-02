@@ -5,45 +5,90 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Watermark Remover</title>
   <link rel="stylesheet" href="/static/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
-    <h1>Watermark Remover</h1>
-
-    <div class="upload">
-      <input type="file" id="fileInput" accept="video/*" />
-      <button id="uploadBtn">Upload</button>
-      <span id="uploadStatus"></span>
+  <header class="site-header">
+    <div class="container">
+      <div class="brand">
+        <div class="logo">WM</div>
+        <div class="titles">
+          <h1>Watermark Remover</h1>
+          <p class="subtitle">Upload, select ROI, and remove watermarks with high quality.</p>
+        </div>
+      </div>
     </div>
+  </header>
 
-    <div class="player">
+  <main class="container grid">
+    <section class="card" id="uploadCard">
+      <h2>1. Upload Video</h2>
+      <div id="dropzone" class="dropzone">
+        <input type="file" id="fileInput" accept="video/*" hidden />
+        <div class="dropzone-content">
+          <div class="drop-icon">⬆️</div>
+          <p><strong>Drag & drop</strong> a video here, or</p>
+          <button id="browseBtn" class="btn">Browse</button>
+          <p class="hint">Supported: MP4, MOV, WEBM, MKV, AVI</p>
+        </div>
+      </div>
+      <div class="progress" id="uploadProgress" hidden>
+        <div class="progress-bar" id="uploadProgressBar"></div>
+      </div>
+      <div class="status" id="uploadStatus"></div>
+      <div class="actions">
+        <button id="uploadBtn" class="btn primary" disabled>Upload</button>
+      </div>
+    </section>
+
+    <section class="card span-2" id="editorCard">
+      <h2>2. Select Watermark Area</h2>
       <div class="video-wrapper">
         <video id="video" controls></video>
         <canvas id="overlay"></canvas>
+        <div class="overlay-help" id="overlayHelp">Click and drag on the video to draw the rectangle over the watermark.</div>
       </div>
       <div class="controls">
-        <label>Method:
-          <select id="method">
-            <option value="telea" selected>Telea (fast, good)</option>
-            <option value="ns">Navier-Stokes (slower)</option>
-          </select>
-        </label>
-        <label>Quality:
-          <select id="quality">
-            <option value="fast">Fast (smaller, lower quality)</option>
-            <option value="balanced">Balanced</option>
-            <option value="better">Better (slow, high quality)</option>
-            <option value="best">Best (very slow, near-lossless, ≥1080p)</option>
-            <option value="ultra" selected>Ultra (lossless, very large file)</option>
-          </select>
-        </label>
-        <button id="clearRoi">Clear ROI</button>
-        <button id="processBtn" disabled>Remove</button>
+        <div class="control-group">
+          <label>Method
+            <select id="method">
+              <option value="telea" selected>Telea (fast, good)</option>
+              <option value="ns">Navier-Stokes (slower)</option>
+            </select>
+          </label>
+        </div>
+        <div class="control-group">
+          <label>Quality
+            <select id="quality">
+              <option value="fast">Fast</option>
+              <option value="balanced">Balanced</option>
+              <option value="better">Better</option>
+              <option value="best">Best</option>
+              <option value="ultra" selected>Ultra (lossless)</option>
+            </select>
+          </label>
+        </div>
+        <div class="spacer"></div>
+        <button id="clearRoi" class="btn">Clear ROI</button>
+        <button id="processBtn" class="btn primary" disabled>Remove Watermark</button>
       </div>
-      <div id="processStatus"></div>
-      <div id="downloadLink"></div>
+      <div class="progress" id="processProgress" hidden>
+        <div class="progress-indeterminate"></div>
+      </div>
+      <div class="status" id="processStatus"></div>
+      <div id="downloadLink" class="download"></div>
+    </section>
+  </main>
+
+  <div id="toasts" class="toasts"></div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Processed locally with OpenCV + FFmpeg. Your originals are not modified.</p>
     </div>
-  </div>
+  </footer>
 
   <script src="/static/app.js"></script>
 </body>

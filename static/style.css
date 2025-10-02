@@ -1,12 +1,52 @@
-.container { max-width: 900px; margin: 20px auto; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif; }
-.upload { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.player { border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; }
-.video-wrapper { position: relative; width: 100%; background: #000; aspect-ratio: 16/9; overflow: hidden; border-radius: 6px; }
-#video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.root, html, body { height: 100%; }
+body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", Helvetica, Arial, sans-serif; color: #0f172a; background: #f8fafc; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+.site-header { background: white; border-bottom: 1px solid #e2e8f0; }
+.site-header .brand { display: flex; align-items: center; gap: 12px; padding: 16px 0; }
+.logo { background: #111827; color: white; width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; font-weight: 700; }
+.titles h1 { margin: 0; font-size: 18px; }
+.subtitle { margin: 2px 0 0; color: #475569; font-size: 13px; }
+
+.grid { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 16px 0 32px; }
+@media (min-width: 960px) { .grid { grid-template-columns: 1fr 2fr; } .span-2 { grid-column: span 2; } }
+
+.card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.card h2 { margin: 0 0 12px; font-size: 16px; }
+
+.dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 24px; text-align: center; background: #f8fafc; transition: 0.2s border-color, 0.2s background; }
+.dropzone.dragover { border-color: #111827; background: #eef2ff; }
+.drop-icon { font-size: 28px; }
+.hint { color: #64748b; font-size: 12px; }
+
+.btn { background: #111827; color: white; border: none; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+.btn.primary { background: #1d4ed8; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.actions { margin-top: 12px; }
+
+.progress { background: #e2e8f0; height: 8px; border-radius: 999px; overflow: hidden; margin-top: 10px; }
+.progress-bar { background: linear-gradient(90deg, #60a5fa, #2563eb); width: 0%; height: 100%; transition: width 0.2s ease; }
+.progress-indeterminate { position: relative; height: 8px; overflow: hidden; background: #e2e8f0; border-radius: 999px; }
+.progress-indeterminate::before { content: ""; position: absolute; left: -40%; width: 40%; top: 0; bottom: 0; background: linear-gradient(90deg, #60a5fa, #2563eb); animation: ind 1.2s infinite; border-radius: 999px; }
+@keyframes ind { 0% { left: -40%; } 50% { left: 60%; } 100% { left: 100%; } }
+
+.status { margin-top: 8px; color: #475569; font-size: 14px; min-height: 20px; }
+.download { margin-top: 10px; }
+
+.video-wrapper { position: relative; width: 100%; background: #0b0f19; border-radius: 12px; overflow: hidden; }
+#video { width: 100%; height: auto; display: block; }
 #overlay { position: absolute; left: 0; top: 0; pointer-events: auto; z-index: 2; }
-.controls { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
-#processStatus { margin-top: 8px; color: #374151; }
-#downloadLink { margin-top: 8px; }
-button { background: #111827; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
-button:disabled { background: #9ca3af; cursor: not-allowed; }
-select, input[type="file"] { padding: 6px; }
+.overlay-help { position: absolute; left: 12px; bottom: 12px; color: white; background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 8px; font-size: 12px; z-index: 3; }
+
+.controls { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.control-group label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #0f172a; }
+.control-group select { padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; }
+.spacer { flex: 1; }
+
+.toasts { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+.toast { background: #111827; color: #fff; padding: 10px 12px; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); font-size: 14px; }
+.toast.success { background: #16a34a; }
+.toast.error { background: #dc2626; }
+
+.site-footer { border-top: 1px solid #e2e8f0; padding: 16px 0; color: #64748b; font-size: 13px; text-align: center; background: white; }
