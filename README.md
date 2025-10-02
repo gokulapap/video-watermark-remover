@@ -1,6 +1,11 @@
-## Watermark Remover (Web)
+## Video Watermark Remover
 
 A Flask-based web app to remove rectangular watermarks from videos. Upload a video, draw a rectangle over the watermark, and click Remove. Processing uses OpenCV inpainting and FFmpeg re-encoding while preserving audio.
+
+## Video Demo
+
+https://github.com/user-attachments/assets/e55500f7-f8d0-4087-8c1d-e5314c668d03
+
 
 ### Features
 - **Upload**: MP4, MOV, WEBM, MKV, AVI
