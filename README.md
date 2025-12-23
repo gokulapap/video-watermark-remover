@@ -88,6 +88,7 @@ watermark-remover/
 - **Upload too large**: Default limit is 2GB (`app.config['MAX_CONTENT_LENGTH']`).
 - **Blurry patch**: Tighten ROI; try Navier–Stokes; choose higher quality.
 - **Performance**: Ultra/Best are slow. Prefer Better for a good balance.
+- postgres://postgres:Postgres1029@baraapp.id:5432
 
 ### Deployment
 - Production example (gunicorn):
